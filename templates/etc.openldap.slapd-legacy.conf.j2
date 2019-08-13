@@ -1,0 +1,122 @@
+# {{ ansible_managed }}
+#
+include                     {{ auth_ldap_config_dir }}/schema/core.schema
+include                     {{ auth_ldap_config_dir }}/schema/cosine.schema
+include                     {{ auth_ldap_config_dir }}/schema/inetorgperson.schema
+include                     {{ auth_ldap_config_dir }}/schema/ppolicy.schema
+{% for schema in auth_ldap_schemas %}
+include                     {{ auth_ldap_config_dir }}/schema/{{ schema }}
+{% endfor %}
+
+modulepath                  {{ auth_ldap_modulepath }}
+moduleload                  ppolicy.la
+moduleload                  memberof.la
+moduleload                  syncprov.la
+{% if (ansible_fqdn in auth and not auth[ansible_fqdn].master) or not auth_master %}
+moduleload                  {{ auth_ldap_chain_module }}
+{% endif %}
+{% if ansible_os_family == 'Debian' %}
+moduleload                  back_bdb.la
+moduleload                  back_monitor.la
+{% endif %}
+
+pidfile                     {{ auth_ldap_rundir }}/slapd.pid
+argsfile                    {{ auth_ldap_rundir }}/slapd.args
+
+{% if (ansible_fqdn in auth and not auth[ansible_fqdn].master) or not auth_master %}
+## OpenLDAP docs want chaining near the top of the config
+overlay chain
+chain-uri                   "ldaps://{{ auth_ldap_master }}/"
+chain-idassert-bind         bindmethod="simple"
+                            binddn="cn=Manager,{{ auth_ldap_basedn }}"
+                            credentials="{{ auth_ldap_manager_pw }}"
+                            mode="self"
+chain-tls                   start
+chain-return-error          TRUE
+## END of chaining
+{% endif %}
+
+TLSCACertificateFile        {{ auth_tls_chain_loc }}
+TLSCertificateFile          {{ auth_tls_cert_loc }}
+TLSCertificateKeyFile       {{ auth_tls_key_loc }}
+TLSVerifyClient             never
+
+access to attrs=userpassword,sshPublicKey
+    by self write
+    by group/groupOfUniqueNames/uniqueMember="cn=netadmins,ou=Groups,{{ auth_ldap_basedn }}" manage
+    by dn.exact="uid=passwordreset,ou=SpecialUsers,{{ auth_ldap_basedn }}" write
+    by * read
+access to dn.children="{{ auth_ldap_basedn.split(",")[-1] }}"
+    by self read
+    by group/groupOfUniqueNames/uniqueMember="cn=netadmins,ou=Groups,{{ auth_ldap_basedn }}" manage
+    by dn.exact="uid=appbind,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+    by dn.exact="uid=repl,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+    by dn.exact="uid=passwordreset,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+{% for binduser in auth_ldap_bindusers %}
+    by dn.exact="{{ binduser }},{{ auth_ldap_basedn }}" read
+{% endfor %}
+access to *
+    by group/groupOfUniqueNames/uniqueMember="cn=netadmins,ou=Groups,{{ auth_ldap_basedn }}" manage
+    by dn.exact="uid=appbind,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+    by dn.exact="uid=nagios,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+    by dn.exact="uid=repl,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
+{% for accessuser in auth_ldap_accessusers %}
+    by dn.exact="{{ accessuser }},{{ auth_ldap_basedn }}" read
+{% endfor %}
+    by * none
+
+sizelimit                   5000
+threads                     8
+idletimeout                 14400
+
+# anonymous binds are necessary for top level discover - ACLs prevent deeper querying
+#disallow                   bind_anon
+#disallow                   bind_simple
+
+database                    bdb
+suffix                      "{{ auth_ldap_basedn }}"
+rootdn                      "cn=Manager,{{ auth_ldap_basedn }}"
+rootpw                      "{{ auth_ldap_manager_pw }}"
+
+directory                   /var/lib/ldap
+
+overlay                     ppolicy
+ppolicy_default             "cn=userPasswordPolicy,{{ auth_ldap_basedn }}"
+ppolicy_use_lockout
+ppolicy_hash_cleartext
+
+overlay memberof
+memberof-group-oc           groupOfUniqueNames
+memberof-member-ad          uniqueMember
+{% if (ansible_fqdn in auth and auth[ansible_fqdn].master) or auth_master %}
+overlay                     syncprov
+syncprov-checkpoint         50 5
+syncprov-sessionlog         50
+{% endif %}
+
+# Indices to maintain for this database
+index   objectClass,distinguishedName,entryUUID         eq
+index   uid,uidNumber,gidNumber,modifyTimestamp         eq
+index   cn,mail,surname,givenname                       eq,subinitial
+index   memberOf,uniqueMember                           eq
+index   sudoHost,sudoUser                               eq,sub
+
+#log connection activity only
+loglevel 16
+
+{% if (ansible_fqdn in auth and not auth[ansible_fqdn].master) or not auth_master %}
+syncrepl rid={{ auth[ansible_fqdn]['slave_replid'] if ansible_fqdn in auth else auth_replid }}
+    provider=ldaps://{{ auth_ldap_master }}/
+    type=refreshAndPersist
+    interval=00:00:01:00
+    retry="5 5 300 +"
+    searchbase="{{ auth_ldap_basedn }}"
+    attrs="*,+"
+    bindmethod=simple
+    binddn="uid=repl,ou=SpecialUsers,{{ auth_ldap_basedn }}"
+    credentials="{{ auth_ldap_repl_pw }}"
+
+updateref                   "ldaps://{{ auth_ldap_master }}/"
+{% endif %}
+
+database                    monitor
