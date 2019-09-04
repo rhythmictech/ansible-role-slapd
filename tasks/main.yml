@@ -82,3 +82,12 @@
     group: "{{ auth_ldap_group }}"
     mode: 0640
   tags: ['auth']
+
+- name: place the logrotate file
+  copy:
+    src: "etc.logrotate.d.ldap"
+    dest: "/etc/logrotate.d/ldap"
+    owner: root
+    group: root
+    mode: 0644
+  tags: ['auth']
