@@ -52,24 +52,17 @@ access to dn.children="{{ auth_ldap_basedn.split(",")[-1] }}"
     by dn.exact="uid=appbind,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
     by dn.exact="uid=repl,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
     by dn.exact="uid=passwordreset,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
-{% for binduser in auth_ldap_bindusers %}
-    by dn.exact="{{ binduser }},{{ auth_ldap_basedn }}" read
-{% endfor %}
-{% for bindgroup in auth_ldap_bindgroups %}
-    by group.exact="{{ bindgroup }},{{ auth_ldap_basedn }}" read
+{% for bindrule in auth_ldap_bindrules %}
+    {{ bindrule }}
 {% endfor %}
 access to *
     by group/groupOfUniqueNames/uniqueMember="cn=netadmins,ou=Groups,{{ auth_ldap_basedn }}" manage
     by dn.exact="uid=appbind,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
     by dn.exact="uid=nagios,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
     by dn.exact="uid=repl,ou=SpecialUsers,{{ auth_ldap_basedn }}" read
-{% for accessuser in auth_ldap_accessusers %}
-    by dn.exact="{{ accessuser }},{{ auth_ldap_basedn }}" read
+{% for accessrule in auth_ldap_accessrules %}
+    {{ accessrule }}
 {% endfor %}
-{% for accessgroup in auth_ldap_accessgroups %}
-    by group.exact="{{ accessgroup }},{{ auth_ldap_basedn }}" read
-{% endfor %}
-
     by * none
 
 sizelimit                   5000
