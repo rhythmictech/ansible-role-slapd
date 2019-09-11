@@ -18,8 +18,12 @@ auth_ldap_schemas:
 
 auth_use_rsyslog: true
 
-auth_ldap_bindusers: []
+auth_ldap_accessgroups: []
 auth_ldap_accessusers: []
+auth_ldap_bindgroups: []
+auth_ldap_bindusers: []
+
+
 auth_tls_chain_loc: "{{ auth_ldap_config_dir }}/cacerts/cacert.pem"
 auth_tls_cert_loc: "/etc/pki/tls/certs/{{ ansible_fqdn }}.crt"
 auth_tls_key_loc: "/etc/pki/tls/private/{{ ansible_fqdn }}.key"
