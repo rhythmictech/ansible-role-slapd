@@ -20,6 +20,7 @@ auth_use_rsyslog: true
 
 auth_ldap_accessrules: []
 auth_ldap_bindrules: []
+auth_ldap_loglevel: 16
 
 auth_tls_chain_loc: "{{ auth_ldap_config_dir }}/cacerts/cacert.pem"
 auth_tls_cert_loc: "/etc/pki/tls/certs/{{ ansible_fqdn }}.crt"
