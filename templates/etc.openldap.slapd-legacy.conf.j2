@@ -83,7 +83,8 @@ rootpw                      "{{ auth_ldap_manager_pw }}"
 directory                   /var/lib/ldap
 
 overlay                     ppolicy
-ppolicy_default             "cn=userPasswordPolicy,{{ auth_ldap_basedn }}"
+ppolicy_default             "{{ auth_password_policy_account }}"
+
 ppolicy_use_lockout
 ppolicy_hash_cleartext
 

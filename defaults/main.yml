@@ -22,6 +22,8 @@ auth_ldap_accessrules: []
 auth_ldap_bindrules: []
 auth_ldap_loglevel: 16
 
+auth_password_policy_account: "cn=userPasswordPolicy,{{ auth_ldap_basedn }}"
+
 auth_tls_chain_loc: "{{ auth_ldap_config_dir }}/cacerts/cacert.pem"
 auth_tls_cert_loc: "/etc/pki/tls/certs/{{ ansible_fqdn }}.crt"
 auth_tls_key_loc: "/etc/pki/tls/private/{{ ansible_fqdn }}.key"
