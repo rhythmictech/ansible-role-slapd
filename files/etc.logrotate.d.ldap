@@ -1,7 +1,7 @@
 /var/log/ldap
 {
         rotate 4
-        weekly
+        daily
         missingok
         notifempty
         compress
