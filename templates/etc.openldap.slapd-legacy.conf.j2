@@ -108,7 +108,7 @@ index   sudoHost,sudoUser                               eq,sub
 loglevel {{ auth_ldap_loglevel }}
 
 {% if (ansible_fqdn in auth and not auth[ansible_fqdn].master) or not auth_master %}
-syncrepl rid={{ auth[ansible_fqdn]['slave_replid'] if ansible_fqdn in auth else auth_replid }}
+syncrepl rid={{ auth[ansible_fqdn]['replid'] if ansible_fqdn in auth else auth_replid }}
     provider=ldaps://{{ auth_ldap_master }}/
     type=refreshAndPersist
     interval=00:00:01:00
