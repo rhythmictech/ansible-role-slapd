@@ -65,13 +65,13 @@
     mode: 0640
   tags: ['auth']
 
-- name: place the sys init script for ldap
+- name: place sysconfig file
   template:
-    src: "{{ auth_init_script_template }}"
-    dest: "{{ auth_init_script_dest }}"
+    src: etc.sysconfig.slapd.j2
+    dest: /etc/sysconfig/slapd
     owner: root
     group: root
-    mode: 0640
+    mode: '0644'
   tags: ['auth']
 
 - name: place the /var/lib/DB_CONFIG lib file
@@ -82,6 +82,16 @@
     group: "{{ auth_ldap_group }}"
     mode: 0640
   tags: ['auth']
+
+- name: Enable slapd
+  service:
+    name: slapd
+    state: enabled
+
+- name: Start slapd
+  service:
+    name: slapd
+    state: started
 
 - name: place the logrotate file
   copy:

@@ -4,6 +4,8 @@ auth: []
 auth_master: false
 auth_replid: ''
 
+auth_slapd_options: ''
+
 auth_ldap_basedn: ''
 auth_ldap_master: ''
 auth_ldap_manager_pw: ''
