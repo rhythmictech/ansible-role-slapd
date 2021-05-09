@@ -29,3 +29,9 @@ auth_password_policy_account: "cn=userPasswordPolicy,{{ auth_ldap_basedn }}"
 auth_tls_chain_loc: "{{ auth_ldap_config_dir }}/cacerts/cacert.pem"
 auth_tls_cert_loc: "/etc/pki/tls/certs/{{ ansible_fqdn }}.crt"
 auth_tls_key_loc: "/etc/pki/tls/private/{{ ansible_fqdn }}.key"
+
+auth_tls_options:
+  TLSCACertificateFile: "{{ auth_tls_chain_loc }}"
+  TLSCertificateFile: "{{ auth_tls_cert_loc }}"
+  TLSCertificateKeyFile: "{{ auth_tls_key_loc }}"
+  TLSVerifyClient: never

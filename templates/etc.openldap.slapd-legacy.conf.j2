@@ -36,10 +36,12 @@ chain-return-error          TRUE
 ## END of chaining
 {% endif %}
 
-TLSCACertificateFile        {{ auth_tls_chain_loc }}
-TLSCertificateFile          {{ auth_tls_cert_loc }}
-TLSCertificateKeyFile       {{ auth_tls_key_loc }}
-TLSVerifyClient             never
+{% if auth_tls_options %}
+{% for option, value in auth_tls_options.items() %}
+{{ option }}   {{ value }}
+{% endfor %}
+{% endif %}
+
 
 access to attrs=userpassword,sshPublicKey
     by self write
