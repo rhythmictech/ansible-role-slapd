@@ -86,11 +86,7 @@
 - name: Enable slapd
   service:
     name: slapd
-    state: enabled
-
-- name: Start slapd
-  service:
-    name: slapd
+    enabled: yes
     state: started
 
 - name: place the logrotate file
